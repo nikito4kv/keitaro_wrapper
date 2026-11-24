@@ -205,6 +205,20 @@ function syncUnsent(view) {
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Возвращает курсор после «Отправить» и «Отменить». Полоса с этими кнопками сворачивается,
+ * и без этого фокус падал бы в начало страницы: с клавиатуры пришлось бы идти заново от шапки.
+ * Если полоса осталась (ошибка или новые изменения), курсор возвращается на кнопку,
+ * иначе встаёт на название потока, откуда Tab ведёт к его офферам.
+ */
+function restoreFocus(view, bar, hadFocus, buttonNode) {
+  if (!hadFocus) return;
+  const current = document.activeElement;
+  if (current && current !== document.body && !bar.contains(current)) return; // человек уже ушёл сам
+  if (view.offers.unsent) buttonNode.focus();
+  else view.title.focus();
+}
+
 function setError(view, message) {
   view.error.textContent = message ?? '';
   view.error.hidden = !message;
@@ -249,6 +263,7 @@ function unsentBar(view) {
 
   push.addEventListener('click', async () => {
     const willServe = view.offers.items.some((item) => !item.removed);
+    const hadFocus = bar.contains(document.activeElement);
     setBusy(push, true);
     cancel.disabled = true;
     view.holdUnsent = true; // полоса не сворачивается, пока не покажем результат
@@ -268,9 +283,12 @@ function unsentBar(view) {
     if (done && !view.offers.unsent) await wait(320);
     resetButton(push);
     cancel.disabled = false;
+    restoreFocus(view, bar, hadFocus, push);
   });
-  cancel.addEventListener('click', () => {
-    run(view, () => api(`/editor/streams/${view.id}/cancel`, { method: 'POST' }), 'Изменения отменены.');
+  cancel.addEventListener('click', async () => {
+    const hadFocus = bar.contains(document.activeElement);
+    await run(view, () => api(`/editor/streams/${view.id}/cancel`, { method: 'POST' }), 'Изменения отменены.');
+    restoreFocus(view, bar, hadFocus, cancel);
   });
 
   return bar;
@@ -351,6 +369,8 @@ function streamSection(stream, index) {
 
   const head = el('header', 'stream-head');
   const title = el('h2', '', stream.name);
+  title.tabIndex = -1; // в обход по Tab не входит, но на него можно поставить курсор из кода
+  view.title = title;
   if (stream.state !== 'active') title.append(' ', el('span', 'tag', 'выключен'));
   head.append(title, el('p', 'stream-who', `Поток ${index + 1}`));
 

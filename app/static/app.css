@@ -407,9 +407,13 @@ h1 {
   transform-origin: top right;
 }
 
+/*
+  С клавиатуры подсказка открывается по фокусу, мышью по наведению. Фокус после щелчка мышью
+  не считается (:focus-visible), иначе подсказка залипала бы, пока не щёлкнешь в другое место.
+*/
 .has-tip:hover > .tip,
 .has-tip:focus-visible > .tip,
-.has-tip:focus-within > .tip,
+.has-tip:has(:focus-visible) > .tip,
 .info:hover + .tip,
 .info:focus-visible + .tip {
   opacity: 1;
