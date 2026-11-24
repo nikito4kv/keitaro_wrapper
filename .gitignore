@@ -1,0 +1,17 @@
+# секреты и локальные настройки
+.env
+
+# окружение и кэши Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# локальная база SQLite
+*.db
+*.db-journal
+
+# редакторы
+.idea/
+.vscode/
+.claude/

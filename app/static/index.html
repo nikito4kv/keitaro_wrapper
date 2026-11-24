@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Новая кампания Keitaro</title>
+  <link rel="icon" href="data:,">
+  <link rel="preload" href="/static/fonts/golos-text-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="page">
+    <header class="top">
+      <nav class="nav" aria-label="Разделы">
+        <a class="nav-link" href="/" aria-current="page">Новая кампания</a>
+        <a class="nav-link" href="/campaigns">Все кампании</a>
+      </nav>
+      <span class="conn" id="conn" data-state="checking">
+        <span class="conn-dot" aria-hidden="true"></span>
+        <span id="conn-text">Проверяем связь с Keitaro</span>
+      </span>
+    </header>
+
+    <div class="banner" id="banner" role="alert" hidden>
+      <p id="banner-text"></p>
+      <button type="button" class="btn btn-quiet btn-small" id="banner-retry">Повторить</button>
+    </div>
+
+    <main class="layout">
+      <section class="compose reveal" aria-labelledby="compose-title">
+        <h1 id="compose-title">Новая кампания</h1>
+        <p class="lead">Создаётся в Keitaro сразу с двумя потоками: по странам и на оффер.</p>
+
+        <form id="campaign-form" novalidate>
+          <div class="field" data-field="name">
+            <label for="name-input">Название</label>
+            <input class="input" id="name-input" name="name" type="text" maxlength="255" autocomplete="off" aria-describedby="name-error">
+            <p class="error" id="name-error" role="alert" hidden></p>
+          </div>
+
+          <div class="field" data-field="countries">
+            <label for="countries-input">Страны</label>
+            <p class="hint" id="countries-hint">Посетители из этих стран уйдут на <span data-redirect-host>google.com</span>. Можно вставить коды через запятую: MX, AU, RO.</p>
+            <div class="combo">
+              <div class="tags" id="countries-box">
+                <input id="countries-input" type="text" autocomplete="off" spellcheck="false" aria-describedby="countries-hint countries-error">
+              </div>
+              <ul class="listbox" id="countries-list" role="listbox" aria-label="Страны"></ul>
+            </div>
+            <p class="error" id="countries-error" role="alert" hidden></p>
+          </div>
+
+          <div class="field" data-field="offer_id">
+            <label for="offer-input">Оффер</label>
+            <p class="hint" id="offer-hint">Сюда попадут все остальные посетители. Ищите по названию или номеру.</p>
+            <div class="combo">
+              <input class="input" id="offer-input" type="text" autocomplete="off" spellcheck="false" aria-describedby="offer-hint offer-error">
+              <div class="picked" id="offer-picked" hidden>
+                <span class="mono picked-id" id="offer-picked-id"></span>
+                <span class="picked-name" id="offer-picked-name"></span>
+                <button type="button" class="link" id="offer-clear">Сменить</button>
+              </div>
+              <ul class="listbox" id="offer-list" role="listbox" aria-label="Офферы"></ul>
+            </div>
+            <p class="error" id="offer-error" role="alert" hidden></p>
+          </div>
+
+          <section class="plan" aria-labelledby="plan-title">
+            <h2 class="minor-title" id="plan-title">Что будет создано</h2>
+            <dl class="plan-rows">
+              <div class="plan-row">
+                <dt>Поток 1</dt>
+                <dd><span id="plan-geo" class="is-empty">страны не выбраны</span> <span class="arrow" aria-hidden="true">→</span> <span data-redirect-host>google.com</span></dd>
+              </div>
+              <div class="plan-row">
+                <dt>Поток 2</dt>
+                <dd>все остальные <span class="arrow" aria-hidden="true">→</span> <span id="plan-offer" class="is-empty">оффер не выбран</span></dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="defaults" id="defaults" data-field="defaults" aria-labelledby="defaults-title">
+            <div class="defaults-head">
+              <h2 class="minor-title" id="defaults-title">Домен, группа и источник</h2>
+              <button type="button" class="link" id="defaults-edit">Изменить</button>
+            </div>
+            <dl class="defaults-rows" id="defaults-rows" hidden>
+              <div><dt>Домен</dt><dd id="defaults-domain"></dd></div>
+              <div><dt>Группа</dt><dd id="defaults-group"></dd></div>
+              <div><dt>Источник</dt><dd id="defaults-source"></dd></div>
+            </dl>
+            <p class="defaults-empty" id="defaults-empty" hidden>Пока не выбраны. Без них кампанию не создать.</p>
+          </section>
+
+          <p class="form-error" id="form-error" role="alert" hidden></p>
+
+          <button type="submit" class="btn btn-primary" id="submit">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label" id="submit-label">Создать кампанию</span>
+          </button>
+        </form>
+      </section>
+
+      <section class="history reveal" aria-labelledby="history-title">
+        <h2 id="history-title">Созданные кампании</h2>
+        <p class="visually-hidden" id="live" role="status" aria-live="polite"></p>
+        <ul class="camps" id="camps" aria-busy="true">
+          <li class="skeleton"><span></span><span></span><span></span></li>
+          <li class="skeleton"><span></span><span></span><span></span></li>
+        </ul>
+        <div class="empty" id="camps-empty" hidden>
+          <p class="empty-title">Здесь пока пусто</p>
+          <p>Кампании, созданные через форму, появятся в этом списке вместе со ссылками.</p>
+        </div>
+        <p class="form-error" id="camps-error" role="alert" hidden></p>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="dialog" id="defaults-dialog" aria-labelledby="dialog-title">
+    <form method="dialog" id="defaults-form" novalidate>
+      <h2 id="dialog-title">Домен, группа и источник</h2>
+      <p class="dialog-lead">С ними создаётся каждая новая кампания. Списки берутся из Keitaro.</p>
+
+      <div class="field">
+        <label for="domain-select">Домен</label>
+        <select class="input select" id="domain-select" required></select>
+      </div>
+      <div class="field">
+        <label for="group-select">Группа</label>
+        <select class="input select" id="group-select" required></select>
+      </div>
+      <div class="field">
+        <label for="source-select">Источник</label>
+        <select class="input select" id="source-select" required></select>
+      </div>
+
+      <p class="form-error" id="dialog-error" role="alert" hidden></p>
+
+      <div class="dialog-actions">
+        <button type="submit" class="btn btn-primary" id="defaults-save" value="save">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="btn-label">Сохранить</span>
+        </button>
+        <button type="button" class="btn btn-quiet" id="defaults-cancel">Отмена</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
