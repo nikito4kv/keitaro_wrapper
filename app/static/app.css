@@ -564,32 +564,66 @@ h1 {
 }
 
 /*
-  Кнопка в работе. Подпись и значок становятся невидимыми, но место за ними остаётся,
-  а по центру крутится вертушка. Ширина кнопки при этом не меняется.
+  Кнопка в работе и кнопка «готово». Подпись и значок становятся прозрачными, но место
+  за ними остаётся, поэтому ширина кнопки не меняется. По центру сначала крутится
+  вертушка, после успеха её сменяет галочка, потом галочка гаснет и подпись проявляется.
 */
-.spinner {
+.spinner,
+.btn-done {
   position: absolute;
   inset: 0;
-  display: none;
+  margin: auto;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.spinner {
   width: 16px;
   height: 16px;
-  margin: auto;
   border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
   border-top-color: currentColor;
   border-radius: 50%;
-  animation: spin 600ms linear infinite;
+  animation: spin 600ms linear infinite paused;
+  transition: opacity 140ms ease;
 }
 
-.btn[aria-busy="true"] {
+.btn-done {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  transform: scale(0.5);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.btn > :not(.spinner):not(.btn-done) {
+  transition: opacity 180ms ease;
+}
+
+.btn[aria-busy="true"],
+.btn[data-done] {
   opacity: 1;
 }
 
-.btn[aria-busy="true"] > :not(.spinner) {
-  visibility: hidden;
+.btn[aria-busy="true"] > :not(.spinner):not(.btn-done),
+.btn[data-done] > :not(.spinner):not(.btn-done) {
+  opacity: 0;
 }
 
 .btn[aria-busy="true"] .spinner {
-  display: block;
+  opacity: 1;
+  animation-play-state: running;
+}
+
+/* Галочка появляется с лёгким увеличением, исчезает быстрее и без движения */
+.btn[data-done] .btn-done {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 160ms ease,
+    transform 320ms var(--ease-out);
 }
 
 @keyframes spin {
@@ -1539,17 +1573,6 @@ label {
   overflow-wrap: anywhere;
 }
 
-.stream-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 500;
-  animation: fade 240ms ease both;
-}
-
 .stream-plain {
   color: var(--ink-2);
   font-size: 14px;
@@ -1903,6 +1926,7 @@ label {
   .btn,
   .copy,
   .copy-face,
+  .btn-done,
   .tip {
     transform: none !important;
   }

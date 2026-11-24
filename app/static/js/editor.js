@@ -16,13 +16,16 @@ import {
   el,
   formatTime,
   infoTip,
+  flashDone,
   linkBox,
   offerTitle,
   reportKeitaro,
+  resetButton,
   setBusy,
   setConnection,
   setText,
   shortList,
+  showDone,
 } from './ui.js';
 
 const campaignId = Number(location.pathname.split('/').filter(Boolean).pop());
@@ -163,20 +166,7 @@ function renderOffers(view, offers, { initial = false } = {}) {
   }
 
   const active = offers.items.filter((item) => !item.removed);
-
-  // Полоса с неотправленными изменениями. Последствие отправки написано до нажатия кнопки.
-  view.unsent.classList.toggle('is-open', offers.unsent);
-  view.unsent.inert = !offers.unsent;
-  if (offers.unsent) {
-    view.status.hidden = true; // «Отправлено в 13:57» верно, только пока после отправки ничего не меняли
-    if (!active.length) {
-      view.unsentTail.textContent = 'После отправки в потоке не останется офферов, посетителям будет некуда идти.';
-    } else if (!view.servesOffers) {
-      view.unsentTail.textContent = 'Сейчас поток офферы не раздаёт. После отправки начнёт.';
-    } else {
-      view.unsentTail.textContent = 'В Keitaro пока прежний состав офферов.';
-    }
-  }
+  syncUnsent(view);
 
   const notes = [];
   if (active.length && offers.total !== 100) {
@@ -190,6 +180,30 @@ function renderOffers(view, offers, { initial = false } = {}) {
 
   view.empty.hidden = offers.items.length > 0;
 }
+
+/**
+ * Полоса с неотправленными изменениями. Последствие отправки написано до нажатия кнопки.
+ * Сразу после отправки полоса ещё секунду держится открытой (view.holdUnsent),
+ * чтобы человек увидел галочку и слова «Отправлено в Keitaro», и только потом сворачивается.
+ */
+function syncUnsent(view) {
+  const offers = view.offers;
+  const open = offers.unsent || view.holdUnsent;
+  view.unsent.classList.toggle('is-open', open);
+  view.unsent.inert = !open;
+  if (!offers.unsent) return; // текст не трогаем: полоса либо закрыта, либо показывает «Отправлено»
+
+  view.unsentTitle.textContent = 'Изменения не отправлены. ';
+  if (!offers.items.some((item) => !item.removed)) {
+    view.unsentTail.textContent = 'После отправки в потоке не останется офферов, посетителям будет некуда идти.';
+  } else if (!view.servesOffers) {
+    view.unsentTail.textContent = 'Сейчас поток офферы не раздаёт. После отправки начнёт.';
+  } else {
+    view.unsentTail.textContent = 'В Keitaro пока прежний состав офферов.';
+  }
+}
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function setError(view, message) {
   view.error.textContent = message ?? '';
@@ -221,8 +235,9 @@ function unsentBar(view) {
   const inner = el('div', 'fold-inner');
   const body = el('div', 'unsent-body');
   const text = el('p');
+  view.unsentTitle = el('strong', '', 'Изменения не отправлены. ');
   view.unsentTail = el('span');
-  text.append(el('strong', '', 'Изменения не отправлены. '), view.unsentTail);
+  text.append(view.unsentTitle, view.unsentTail);
 
   const actions = el('div', 'unsent-actions');
   const push = button('Отправить в Keitaro', 'btn-primary btn-small', { spinner: true });
@@ -235,13 +250,24 @@ function unsentBar(view) {
   push.addEventListener('click', async () => {
     const willServe = view.offers.items.some((item) => !item.removed);
     setBusy(push, true);
+    cancel.disabled = true;
+    view.holdUnsent = true; // полоса не сворачивается, пока не покажем результат
     const done = await run(view, () => api(`/editor/streams/${view.id}/push`, { method: 'POST' }), 'Изменения отправлены в Keitaro.');
-    setBusy(push, false);
+
     if (done) {
       if (willServe) view.servesOffers = true;
-      view.status.replaceChildren(icon('check', 14), `Отправлено в Keitaro в ${formatTime(new Date())}`);
-      view.status.hidden = false;
+      // Вертушку на кнопке сменяет галочка, рядом слова «Отправлено в Keitaro».
+      view.unsentTitle.textContent = 'Отправлено в Keitaro.';
+      view.unsentTail.textContent = '';
+      await showDone(push);
     }
+
+    // Теперь полоса плавно сворачивается (если за эту секунду не появилось новых изменений).
+    view.holdUnsent = false;
+    syncUnsent(view);
+    if (done && !view.offers.unsent) await wait(320);
+    resetButton(push);
+    cancel.disabled = false;
   });
   cancel.addEventListener('click', () => {
     run(view, () => api(`/editor/streams/${view.id}/cancel`, { method: 'POST' }), 'Изменения отменены.');
@@ -318,6 +344,7 @@ function streamSection(stream, index) {
     section,
     rows: new Map(),
     busy: false,
+    holdUnsent: false,
     offers: null,
     servesOffers: stream.serves_offers,
   };
@@ -325,9 +352,7 @@ function streamSection(stream, index) {
   const head = el('header', 'stream-head');
   const title = el('h2', '', stream.name);
   if (stream.state !== 'active') title.append(' ', el('span', 'tag', 'выключен'));
-  view.status = el('p', 'stream-status');
-  view.status.hidden = true;
-  head.append(title, el('p', 'stream-who', `Поток ${index + 1}`), view.status);
+  head.append(title, el('p', 'stream-who', `Поток ${index + 1}`));
 
   view.unsent = unsentBar(view);
   view.error = el('p', 'form-error');
@@ -405,8 +430,12 @@ async function load() {
 refreshButton.addEventListener('click', async () => {
   setBusy(refreshButton, true);
   const done = await load();
-  setBusy(refreshButton, false);
-  if (done) live.textContent = 'Состав потоков обновлён из Keitaro.';
+  if (done) {
+    live.textContent = 'Состав потоков обновлён из Keitaro.';
+    flashDone(refreshButton); // вертушку сменяет галочка, потом возвращается подпись
+  } else {
+    setBusy(refreshButton, false);
+  }
 });
 
 $('banner-retry').addEventListener('click', () => {

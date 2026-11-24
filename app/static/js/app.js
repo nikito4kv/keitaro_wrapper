@@ -9,8 +9,11 @@ import {
   offerTitle,
   regionNames,
   searchKey,
+  flashDone,
+  resetButton,
   setBusy,
   setConnection,
+  showDone,
   shortList,
   showBanner,
 } from './ui.js';
@@ -341,10 +344,12 @@ $('defaults-form').addEventListener('submit', async (event) => {
       },
     });
     renderDefaults();
+    // Галочка на кнопке, и только потом окно закрывается: видно, что сохранилось.
+    await showDone(saveButton, 600);
     dialog.close();
+    resetButton(saveButton);
   } catch (error) {
     setDialogError(error.message);
-  } finally {
     setBusy(saveButton, false);
   }
 });
@@ -463,6 +468,7 @@ form.addEventListener('submit', async (event) => {
 
   state.busy = true;
   setBusy(submitButton, true);
+  let created = false;
   try {
     const campaign = await api('/campaigns', {
       method: 'POST',
@@ -472,6 +478,7 @@ form.addEventListener('submit', async (event) => {
     const row = campaignRow(campaign, { fresh: true });
     $('camps').prepend(row);
     $('live').textContent = `Кампания «${campaign.name}» создана.`;
+    created = true;
     resetForm();
     if (window.matchMedia('(max-width: 920px)').matches) {
       row.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -487,7 +494,9 @@ form.addEventListener('submit', async (event) => {
     else document.querySelector('.field.is-invalid input')?.focus();
   } finally {
     state.busy = false;
-    setBusy(submitButton, false);
+    // После успеха вертушку сменяет галочка, потом возвращается подпись.
+    if (created) flashDone(submitButton);
+    else setBusy(submitButton, false);
   }
 });
 

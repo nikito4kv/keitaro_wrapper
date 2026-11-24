@@ -75,10 +75,53 @@ export function button(text, className, { href = '', iconBefore = '', iconAfter 
   return node;
 }
 
-export function setBusy(node, busy, label) {
+// Кнопка проходит три состояния: обычная, «в работе» (крутится вертушка) и «готово» (галочка).
+// Подпись при этом прозрачна, но место за ней остаётся, поэтому ширина кнопки не меняется.
+
+const DONE_MS = 900;
+
+function ensureParts(node) {
+  if (!node.querySelector(':scope > .spinner')) node.prepend(el('span', 'spinner'));
+  if (!node.querySelector(':scope > .btn-done')) {
+    const done = el('span', 'btn-done');
+    done.setAttribute('aria-hidden', 'true');
+    done.append(icon('check', 18));
+    node.append(done);
+  }
+}
+
+/** Включает и выключает вертушку. Пока кнопка в работе, нажать её нельзя. */
+export function setBusy(node, busy) {
+  ensureParts(node);
+  clearTimeout(node.doneTimer);
+  delete node.dataset.done;
   node.disabled = busy;
   node.setAttribute('aria-busy', String(busy));
-  if (label) node.querySelector('.btn-label').textContent = label;
+}
+
+/** Меняет вертушку на галочку и ждёт, пока человек её увидит. Кнопка остаётся с галочкой. */
+export function showDone(node, ms = DONE_MS) {
+  ensureParts(node);
+  node.setAttribute('aria-busy', 'false');
+  node.disabled = true;
+  node.dataset.done = 'true';
+  return new Promise((resolve) => {
+    node.doneTimer = setTimeout(resolve, ms);
+  });
+}
+
+/** Возвращает кнопку в обычный вид: галочка плавно гаснет, подпись проявляется. */
+export function resetButton(node) {
+  clearTimeout(node.doneTimer);
+  delete node.dataset.done;
+  node.disabled = false;
+  node.setAttribute('aria-busy', 'false');
+}
+
+/** Галочка на миг и обратно к подписи. Для кнопок, которые после успеха остаются на месте. */
+export async function flashDone(node, ms = DONE_MS) {
+  await showDone(node, ms);
+  resetButton(node);
 }
 
 /** Значок «i» и подсказка к нему. Ставятся в строку .label-row сразу после подписи. */
