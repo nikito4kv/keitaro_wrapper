@@ -17,9 +17,22 @@ log = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).parent / "static"
 
+class FreshStaticFiles(StaticFiles):
+    """Раздаёт файлы страницы так, чтобы браузер каждый раз сверялся с сервером.
+
+    Без этого после обновления приложения браузер мог бы ещё долго брать старые скрипты из своего кэша:
+    страница новая, а поведение прежнее. Сверка дешёвая: если файл не менялся, сервер отвечает «не изменился».
+    """
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 app = FastAPI(title="Создаватор кампаний Keitaro", docs_url="/api/docs", redoc_url=None, openapi_url="/api/openapi.json")
 app.include_router(router)
-app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/static", FreshStaticFiles(directory=STATIC_DIR), name="static")
 
 
 def _page(name: str) -> FileResponse:

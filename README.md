@@ -191,7 +191,7 @@ DATABASE_URL=postgresql+psycopg://user:password@localhost:5432/keitaro_manager
 
 ```json
 {
-  "name": "MX nutra",
+  "name": "test_lapa_campaign1",
   "alias": "wVqN1Rk2",
   "type": "position",
   "state": "active",

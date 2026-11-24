@@ -155,7 +155,8 @@ const countriesList = attachListbox({
   onPick(country) {
     countriesInput.value = '';
     addCountry(country.code);
-    return 'keep';
+    // Список после выбора закрывается: открытым он лежал поверх поля «Оффер», и щелчок
+    // по этому полю добавлял случайную страну. Чтобы выбрать ещё одну, достаточно начать печатать.
   },
 });
 
@@ -164,14 +165,14 @@ countriesInput.addEventListener('paste', (event) => {
   if (!looksLikeCodeList(text)) return;
   event.preventDefault();
   addCountriesFromText(text);
-  countriesList.reload();
+  countriesList.close(); // иначе список закрыл бы сообщение о неузнанных кодах
 });
 
 countriesInput.addEventListener('input', () => {
   // Набрали код и поставили запятую: сразу превращаем в страну.
   if (/[,;]/.test(countriesInput.value)) {
     addCountriesFromText(countriesInput.value);
-    countriesList.reload();
+    countriesList.close(); // иначе список закрыл бы сообщение о неузнанных кодах
   } else {
     setFieldError('countries', null);
   }
@@ -208,7 +209,7 @@ function setOffer(offer) {
   renderPlan();
 }
 
-attachListbox({
+const offersList = attachListbox({
   input: offerInput,
   list: $('offer-list'),
   debounce: 160,
@@ -444,14 +445,31 @@ async function loadCampaigns() {
 
 function validate() {
   clearErrors();
+  // Каждая проблема: поле, текст ошибки и способ поставить туда курсор.
+  // В поля со списком курсор ставится «тихо», чтобы раскрывшийся список не закрыл текст ошибки.
   const problems = [];
-  if (!nameInput.value.trim()) problems.push(['name', 'Введите название кампании.', nameInput]);
-  if (!state.picked.length) problems.push(['countries', 'Выберите хотя бы одну страну.', countriesInput]);
-  if (!state.offer) problems.push(['offer_id', 'Выберите оффер из списка.', offerInput]);
-  if (!state.defaults) problems.push(['defaults', 'Выберите домен, группу и источник.', $('defaults-edit')]);
+  if (!nameInput.value.trim()) problems.push(['name', 'Введите название кампании.', () => nameInput.focus()]);
+
+  // Текст, который остался в поле стран и не стал страной (например, UK вместо GB), нельзя молча
+  // отбросить: кампания создалась бы без этой страны, а в Keitaro это уже не отменить.
+  const leftover = countriesInput.value.trim();
+  if (leftover) {
+    problems.push([
+      'countries',
+      `«${leftover}» не стало страной. Выберите страну из подсказок или сотрите этот текст.`,
+      () => countriesList.focusQuietly(),
+    ]);
+  } else if (!state.picked.length) {
+    problems.push(['countries', 'Выберите хотя бы одну страну.', () => countriesList.focusQuietly()]);
+  }
+
+  if (!state.offer) problems.push(['offer_id', 'Выберите оффер из списка.', () => offersList.focusQuietly()]);
+  if (!state.defaults) {
+    problems.push(['defaults', 'Выберите домен, группу и источник.', () => $('defaults-edit').focus()]);
+  }
 
   problems.forEach(([field, message]) => setFieldError(field, message));
-  problems[0]?.[2].focus({ preventScroll: false });
+  problems[0]?.[2]();
   return problems.length === 0;
 }
 

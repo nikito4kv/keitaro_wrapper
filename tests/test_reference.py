@@ -92,3 +92,12 @@ def test_missing_settings_are_explained():
 )
 def test_tracker_address_is_cleaned(raw):
     assert normalize_base_url(raw) == "https://tracker.test"
+
+
+def test_page_files_are_always_revalidated(client):
+    """После обновления приложения браузер не должен брать старые скрипты из своего кэша."""
+    for path in ("/static/js/app.js", "/static/app.css", "/"):
+        response = client.get(path)
+
+        assert response.status_code == 200
+        assert response.headers["cache-control"] == "no-cache"

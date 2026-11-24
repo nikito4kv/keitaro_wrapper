@@ -121,8 +121,11 @@ export function attachListbox({ input, list, source, renderOption, onPick, onEnt
     }, 0);
   });
 
+  // Фокус «без списка»: когда поле подсвечено из-за ошибки, список закрыл бы её текст.
+  let quietFocus = false;
+
   input.addEventListener('focus', () => {
-    if (!returningToWindow) open();
+    if (!returningToWindow && !quietFocus) open();
   });
   input.addEventListener('click', () => {
     if (!isOpen) open();
@@ -170,5 +173,14 @@ export function attachListbox({ input, list, source, renderOption, onPick, onEnt
     }
   });
 
-  return { reload: load, close: () => setOpen(false) };
+  return {
+    reload: load,
+    close: () => setOpen(false),
+    /** Ставит курсор в поле, не раскрывая список. Список откроется, когда человек начнёт печатать. */
+    focusQuietly() {
+      quietFocus = true;
+      input.focus();
+      quietFocus = false;
+    },
+  };
 }
