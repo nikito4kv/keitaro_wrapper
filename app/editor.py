@@ -24,7 +24,6 @@ from app.models import StreamOffer
 from app.schemas import (
     EditorOut,
     EditorStream,
-    StreamFilterOut,
     StreamOfferOut,
     StreamOffersOut,
     TrackerCampaign,
@@ -33,7 +32,6 @@ from app.services import ServiceError
 from app.shares import rebalance
 
 OFFERS_SCHEMA = "landings"  # так Keitaro называет поток, который раздаёт офферы
-REDIRECT_SCHEMA = "redirect"
 
 
 # Чтение из Keitaro ------------------------------------------------------------
@@ -70,17 +68,16 @@ def open_campaign(db: Session, keitaro: KeitaroClient, campaign_id: int) -> Edit
         raise
 
     streams.sort(key=lambda stream: (stream.get("position") or 0, stream["id"]))
-    offer_stream_ids = [int(stream["id"]) for stream in streams if stream.get("schema") == OFFERS_SCHEMA]
+    stream_ids = [int(stream["id"]) for stream in streams]
 
-    # Потоки, которых в кампании больше нет (или в них больше не офферы), забываем.
+    # Потоки, которых в кампании больше нет, забываем.
     db.execute(
-        delete(StreamOffer).where(
-            StreamOffer.campaign_id == campaign_id, StreamOffer.stream_id.not_in(offer_stream_ids)
-        )
+        delete(StreamOffer).where(StreamOffer.campaign_id == campaign_id, StreamOffer.stream_id.not_in(stream_ids))
     )
+    # Все потоки для редактора одинаковы: у потока есть офферы или их пока нет.
+    # Что поток делает без офферов (фильтры, редирект), редактор не разбирает.
     for stream in streams:
-        if stream.get("schema") == OFFERS_SCHEMA:
-            _sync_stream(db, campaign_id, stream)
+        _sync_stream(db, campaign_id, stream)
     db.commit()
 
     names = keitaro.offer_names()
@@ -126,25 +123,13 @@ def _sync_stream(db: Session, campaign_id: int, stream: dict[str, Any]) -> None:
 
 
 def _stream_out(db: Session, stream: dict[str, Any], names: dict[int, str]) -> EditorStream:
-    schema = stream.get("schema")
-    kind = "offers" if schema == OFFERS_SCHEMA else "redirect" if schema == REDIRECT_SCHEMA else "other"
-    payload = stream.get("action_payload")
     return EditorStream(
         id=int(stream["id"]),
         name=str(stream.get("name") or f"Поток {stream['id']}"),
         position=int(stream.get("position") or 0),
         state=str(stream.get("state") or "active"),
-        kind=kind,
-        redirect_url=payload if kind == "redirect" and isinstance(payload, str) else None,
-        filters=[
-            StreamFilterOut(
-                name=str(item.get("name", "")),
-                mode=str(item.get("mode", "accept")),
-                payload=[str(value) for value in item.get("payload") or []],
-            )
-            for item in stream.get("filters") or []
-        ],
-        offers=_offers_out(db, int(stream["id"]), names) if kind == "offers" else None,
+        serves_offers=stream.get("schema") == OFFERS_SCHEMA,
+        offers=_offers_out(db, int(stream["id"]), names),
     )
 
 
@@ -274,13 +259,15 @@ def cancel_changes(db: Session, keitaro: KeitaroClient, stream_id: int) -> Strea
 def push_changes(db: Session, keitaro: KeitaroClient, stream_id: int) -> StreamOffersOut:
     """Отправляет черновик в Keitaro: состав офферов потока заменяется целиком."""
     rows = _rows(db, stream_id)
+    if not any(row.unsent for row in rows):
+        raise ServiceError("Отправлять нечего: в потоке нет неотправленных изменений.")
     active = [row for row in rows if not row.removed]
-    if not active:
-        raise ServiceError("В потоке должен остаться хотя бы один оффер. Добавьте оффер или отмените изменения.")
 
     # Убранные офферы в запрос не попадают совсем: из Keitaro они исчезают, а не остаются с нулевой долей.
     payload = [{"offer_id": row.offer_id, "share": row.share, "state": "active"} for row in active]
-    keitaro.set_stream_offers(stream_id, payload)
+    # Поток, который офферы ещё не раздавал, вместе с первым оффером переключаем на офферы.
+    serves_offers = keitaro.stream(stream_id).get("schema") == OFFERS_SCHEMA
+    keitaro.set_stream_offers(stream_id, payload, switch_to_offers=bool(active) and not serves_offers)
 
     for row in rows:
         if row.removed:

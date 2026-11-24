@@ -156,6 +156,14 @@ def make_fake_keitaro() -> FastAPI:
         state.puts.append((stream_id, body))
         if "offers" in body:
             state.stored_streams[stream_id]["offers"] = offer_rows(stream_id, body["offers"])
+        if "schema" in body:
+            state.stored_streams[stream_id]["schema"] = body["schema"]
+        return state.stored_streams[stream_id]
+
+    @app.get("/admin_api/v1/streams/{stream_id}")
+    def get_stream(stream_id: int):
+        if stream_id not in state.stored_streams:
+            return JSONResponse({"error": "Entity not found"}, status_code=404)
         return state.stored_streams[stream_id]
 
     @app.delete("/admin_api/v1/campaigns/{campaign_id}")

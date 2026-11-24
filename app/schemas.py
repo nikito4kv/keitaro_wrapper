@@ -157,22 +157,17 @@ class StreamOffersOut(BaseModel):
     items: list[StreamOfferOut]
 
 
-class StreamFilterOut(BaseModel):
-    name: str
-    mode: str
-    payload: list[str]
-
-
 class EditorStream(BaseModel):
+    """Поток кампании в редакторе. Фильтры и действия потока редактор не разбирает: ему важны только офферы."""
+
     id: int
     name: str
     position: int
     state: str
-    # offers: поток с офферами, его можно править; redirect: отправляет по ссылке; other: всё остальное.
-    kind: str
-    redirect_url: str | None
-    filters: list[StreamFilterOut]
-    offers: StreamOffersOut | None
+    # Раздаёт ли поток офферы сейчас. Если нет (например, ведёт по ссылке),
+    # при отправке первого оффера поток переключится на офферы.
+    serves_offers: bool
+    offers: StreamOffersOut
 
 
 class EditorOut(BaseModel):

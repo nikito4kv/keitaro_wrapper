@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>Офферы кампании</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/static/fonts/golos-text-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/app.css">
@@ -13,14 +13,24 @@
 <body>
   <div class="page">
     <header class="top">
+      <a class="brand" href="/campaigns" aria-label="Nikita Lapa. К списку кампаний">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="9" fill="currentColor"/>
+          <path class="brand-letters" d="M8.5 22.5v-13l8 13v-13M16.5 22.5h7" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand-name">Nikita Lapa</span>
+      </a>
       <nav class="nav" aria-label="Разделы">
-        <a class="nav-link" href="/">Новая кампания</a>
         <a class="nav-link" href="/campaigns" aria-current="true">Все кампании</a>
       </nav>
-      <span class="conn" id="conn" data-state="checking">
-        <span class="conn-dot" aria-hidden="true"></span>
-        <span id="conn-text">Проверяем связь с Keitaro</span>
-      </span>
+      <div class="top-side">
+        <span class="conn has-tip" id="conn" data-state="checking" tabindex="0" aria-describedby="conn-tip">
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span id="conn-text">Проверяем связь</span>
+          <span class="tip tip-end" id="conn-tip" role="tooltip">Проверяем, отвечает ли трекер Keitaro.</span>
+        </span>
+        <a class="btn btn-primary btn-small cta" href="/" aria-label="Новая кампания"><span data-icon="plus"></span><span class="cta-text">Новая кампания</span></a>
+      </div>
     </header>
 
     <div class="banner" id="banner" role="alert" hidden>
@@ -29,20 +39,22 @@
     </div>
 
     <main class="narrow reveal">
-      <a class="back" href="/campaigns">← Все кампании</a>
+      <a class="back" href="/campaigns"><span data-icon="back" data-size="14"></span>Все кампании</a>
 
       <div class="editor-head">
-        <div class="editor-title">
-          <h1 id="campaign-name"><span class="skeleton-line" aria-hidden="true"></span></h1>
-          <div class="camp-link" id="campaign-links"></div>
-        </div>
-        <div class="editor-sync">
+        <h1 id="campaign-name"><span class="skeleton-line" aria-hidden="true"></span></h1>
+        <div class="editor-tools">
           <button type="button" class="btn btn-quiet btn-small" id="refresh" disabled>
             <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-icon" data-icon="refresh"></span>
             <span class="btn-label">Обновить из Keitaro</span>
           </button>
-          <p class="sync-note" id="sync-note"></p>
+          <a class="btn btn-ghost btn-small" id="admin-link" target="_blank" rel="noopener" hidden>Открыть в Keitaro<span data-icon="external" data-size="14"></span></a>
         </div>
+      </div>
+      <div class="editor-sub">
+        <div id="campaign-link"></div>
+        <p class="sync-note" id="sync-note"></p>
       </div>
 
       <p class="visually-hidden" id="live" role="status" aria-live="polite"></p>
@@ -50,9 +62,12 @@
       <div class="streams" id="streams" aria-busy="true">
         <div class="skeleton"><span></span><span></span><span></span></div>
       </div>
-
-      <p class="empty" id="no-streams" hidden>В этой кампании нет потоков. Добавьте поток в Keitaro и нажмите «Обновить из Keitaro».</p>
     </main>
+
+    <footer class="foot">
+      <span>Тестовое задание выполнил <strong>Nikita Lapa</strong></span>
+      <a class="foot-link" href="https://github.com/nikito4kv/keitaro_wrapper" target="_blank" rel="noopener">Код на GitHub</a>
+    </footer>
   </div>
 
   <script type="module" src="/static/js/editor.js"></script>

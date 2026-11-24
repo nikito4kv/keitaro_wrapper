@@ -35,7 +35,7 @@ def open_editor(client, campaign) -> dict:
     """Открывает кампанию и возвращает её поток с офферами."""
     response = client.get(f"/api/editor/campaigns/{campaign['id']}")
     assert response.status_code == 200
-    return next(stream for stream in response.json()["streams"] if stream["kind"] == "offers")["offers"]
+    return next(stream for stream in response.json()["streams"] if stream["id"] == campaign["stream"])["offers"]
 
 
 def add(client, campaign, offer_id) -> dict:
@@ -188,15 +188,60 @@ def test_adding_removed_offer_brings_it_back(client, campaign):
     assert removed(offers) == []
 
 
-def test_empty_stream_is_not_sent(client, fake, campaign):
+def test_stream_can_be_emptied_and_filled_again(client, fake, campaign):
+    """Тупика нет: из потока можно убрать все офферы, отправить, а потом добавить оффер снова."""
     open_editor(client, campaign)
     for offer_id in (A, B, C):
         act(client, campaign, "DELETE", f"/offers/{offer_id}")
 
+    offers = act(client, campaign, "POST", "/push")
+
+    assert fake.state.fake.puts[-1] == (campaign["stream"], {"offers": []})
+    assert in_keitaro(fake, campaign) == {}
+    assert shares(offers) == {} and removed(offers) == [A, B, C]
+
+    # Открыли кампанию заново: поток на месте, просто пустой. Добавляем новый оффер.
+    assert shares(open_editor(client, campaign)) == {}
+    assert shares(add(client, campaign, D)) == {D: 100}
+    act(client, campaign, "POST", "/push")
+    assert in_keitaro(fake, campaign) == {D: 100}
+
+
+def test_offer_can_be_added_to_stream_without_offers(client, fake, campaign):
+    """Поток, который вёл по ссылке, показан как обычный поток, и в него можно добавить оффер."""
+    state = fake.state.fake
+    geo_id = next(key for key, stream in state.stored_streams.items() if stream["schema"] == "redirect")
+    geo = {"id": campaign["id"], "stream": geo_id}
+
+    before = next(s for s in client.get(f"/api/editor/campaigns/{campaign['id']}").json()["streams"] if s["id"] == geo_id)
+    assert before["serves_offers"] is False
+    assert before["offers"]["items"] == []
+
+    assert shares(add(client, geo, A)) == {A: 100}
+    act(client, geo, "POST", "/push")
+
+    # Вместе с первым оффером поток переключается на офферы, иначе Keitaro их не покажет.
+    assert state.puts[-1] == (geo_id, {"offers": [{"offer_id": A, "share": 100, "state": "active"}], "schema": "landings"})
+    after = next(s for s in client.get(f"/api/editor/campaigns/{campaign['id']}").json()["streams"] if s["id"] == geo_id)
+    assert after["serves_offers"] is True
+    assert shares(after["offers"]) == {A: 100}
+
+
+def test_usual_push_does_not_touch_stream_settings(client, fake, campaign):
+    open_editor(client, campaign)
+    add(client, campaign, D)
+
+    act(client, campaign, "POST", "/push")
+
+    assert set(fake.state.fake.puts[-1][1]) == {"offers"}
+
+
+def test_nothing_to_push(client, fake, campaign):
+    open_editor(client, campaign)
+
     response = client.post(f"/api/editor/streams/{campaign['stream']}/push")
 
     assert response.status_code == 422
-    assert "хотя бы один оффер" in response.json()["detail"]
     assert fake.state.fake.puts == []
 
 
@@ -228,10 +273,11 @@ def test_editor_shows_all_streams_of_campaign(client, campaign):
     geo, offers = body["streams"]
     assert body["campaign"]["name"] == "campaign 2"
     assert body["campaign"]["url"].startswith("https://kt-emulator.test/")
-    assert geo["kind"] == "redirect" and geo["offers"] is None
-    assert geo["redirect_url"] == "https://google.com"
-    assert geo["filters"] == [{"name": "country", "mode": "accept", "payload": ["AU"]}]
-    assert offers["kind"] == "offers"
+    # Поток без офферов показан просто как поток: ни фильтров, ни адреса редиректа редактор не разбирает.
+    assert set(geo) == {"id", "name", "position", "state", "serves_offers", "offers"}
+    assert geo["name"] == "Гео AU" and geo["serves_offers"] is False
+    assert geo["offers"]["items"] == []
+    assert offers["serves_offers"] is True
     assert offers["offers"]["total"] == 100
 
 

@@ -1,6 +1,7 @@
 // Страница «Все кампании»: список из Keitaro, по щелчку открывается редактор офферов.
 
 import { api } from './api.js';
+import { icon } from './icons.js';
 import { $, el, formatTrackerDate, reportKeitaro, searchKey, setBusy, setConnection } from './ui.js';
 
 const PAGE = 100;
@@ -28,7 +29,9 @@ function campaignRow(campaign, index) {
   if (campaign.state !== 'active') meta.append(el('span', 'tag', 'выключена'));
   main.append(meta);
 
-  link.append(main, el('span', 'row-go', 'Изменить офферы'));
+  const go = el('span', 'row-go');
+  go.append(el('span', '', 'Изменить офферы'), icon('chevron', 16));
+  link.append(main, go);
   item.append(link);
   return item;
 }
@@ -45,7 +48,6 @@ function render() {
   $('nothing-found').hidden = !(campaigns.length > 0 && visible.length === 0);
   // Поиск нужен, когда строк уже много. До того он только занимает место.
   $('search-field').hidden = campaigns.length < 8 && !key;
-  // Поиск идёт по уже загруженным кампаниям, поэтому «ещё» при поиске тоже полезно.
   moreButton.hidden = !hasMore;
 }
 
@@ -66,13 +68,13 @@ async function load({ append = false } = {}) {
 searchInput.addEventListener('input', render);
 
 moreButton.addEventListener('click', async () => {
-  setBusy(moreButton, true, 'Загружаем');
+  setBusy(moreButton, true);
   await load({ append: true });
-  setBusy(moreButton, false, 'Показать ещё');
+  setBusy(moreButton, false);
 });
 
 $('banner-retry').addEventListener('click', () => {
-  setConnection('checking', 'Проверяем связь с Keitaro');
+  setConnection('checking');
   load();
 });
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>Новая кампания Keitaro</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/static/fonts/golos-text-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/app.css">
@@ -13,14 +13,23 @@
 <body>
   <div class="page">
     <header class="top">
+      <a class="brand" href="/campaigns" aria-label="Nikita Lapa. К списку кампаний">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="9" fill="currentColor"/>
+          <path class="brand-letters" d="M8.5 22.5v-13l8 13v-13M16.5 22.5h7" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand-name">Nikita Lapa</span>
+      </a>
       <nav class="nav" aria-label="Разделы">
-        <a class="nav-link" href="/" aria-current="page">Новая кампания</a>
         <a class="nav-link" href="/campaigns">Все кампании</a>
       </nav>
-      <span class="conn" id="conn" data-state="checking">
-        <span class="conn-dot" aria-hidden="true"></span>
-        <span id="conn-text">Проверяем связь с Keitaro</span>
-      </span>
+      <div class="top-side">
+        <span class="conn has-tip" id="conn" data-state="checking" tabindex="0" aria-describedby="conn-tip">
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span id="conn-text">Проверяем связь</span>
+          <span class="tip tip-end" id="conn-tip" role="tooltip">Проверяем, отвечает ли трекер Keitaro.</span>
+        </span>
+      </div>
     </header>
 
     <div class="banner" id="banner" role="alert" hidden>
@@ -31,21 +40,26 @@
     <main class="layout">
       <section class="compose reveal" aria-labelledby="compose-title">
         <h1 id="compose-title">Новая кампания</h1>
-        <p class="lead">Создаётся в Keitaro сразу с двумя потоками: по странам и на оффер.</p>
+        <p class="lead">Создаётся в Keitaro сразу с двумя потоками.</p>
 
         <form id="campaign-form" novalidate>
           <div class="field" data-field="name">
-            <label for="name-input">Название</label>
-            <input class="input" id="name-input" name="name" type="text" maxlength="255" autocomplete="off" aria-describedby="name-error">
+            <div class="label-row">
+              <label for="name-input">Название</label>
+            </div>
+            <input class="input" id="name-input" name="name" type="text" maxlength="255" autocomplete="off" placeholder="Например, MX nutra ноябрь" aria-describedby="name-error">
             <p class="error" id="name-error" role="alert" hidden></p>
           </div>
 
           <div class="field" data-field="countries">
-            <label for="countries-input">Страны</label>
-            <p class="hint" id="countries-hint">Посетители из этих стран уйдут на <span data-redirect-host>google.com</span>. Можно вставить коды через запятую: MX, AU, RO.</p>
+            <div class="label-row">
+              <label for="countries-input">Страны</label>
+              <button type="button" class="info" aria-label="Подсказка про страны"><span data-icon="info"></span></button>
+              <span class="tip" id="countries-hint" role="tooltip">Посетители из этих стран уйдут на <span data-redirect-host>google.com</span>. Можно вставить коды через запятую: MX, AU, RO.</span>
+            </div>
             <div class="combo">
               <div class="tags" id="countries-box">
-                <input id="countries-input" type="text" autocomplete="off" spellcheck="false" aria-describedby="countries-hint countries-error">
+                <input id="countries-input" type="text" autocomplete="off" spellcheck="false" placeholder="Страна или код, например MX" aria-describedby="countries-hint countries-error">
               </div>
               <ul class="listbox" id="countries-list" role="listbox" aria-label="Страны"></ul>
             </div>
@@ -53,14 +67,17 @@
           </div>
 
           <div class="field" data-field="offer_id">
-            <label for="offer-input">Оффер</label>
-            <p class="hint" id="offer-hint">Сюда попадут все остальные посетители. Ищите по названию или номеру.</p>
+            <div class="label-row">
+              <label for="offer-input">Оффер</label>
+              <button type="button" class="info" aria-label="Подсказка про оффер"><span data-icon="info"></span></button>
+              <span class="tip" id="offer-hint" role="tooltip">На этот оффер попадут все посетители из остальных стран. Искать можно по названию и по номеру.</span>
+            </div>
             <div class="combo">
-              <input class="input" id="offer-input" type="text" autocomplete="off" spellcheck="false" aria-describedby="offer-hint offer-error">
+              <input class="input" id="offer-input" type="text" autocomplete="off" spellcheck="false" placeholder="Название или номер оффера" aria-describedby="offer-hint offer-error">
               <div class="picked" id="offer-picked" hidden>
                 <span class="mono picked-id" id="offer-picked-id"></span>
                 <span class="picked-name" id="offer-picked-name"></span>
-                <button type="button" class="link" id="offer-clear">Сменить</button>
+                <button type="button" class="btn btn-ghost btn-tiny" id="offer-clear">Сменить</button>
               </div>
               <ul class="listbox" id="offer-list" role="listbox" aria-label="Офферы"></ul>
             </div>
@@ -69,24 +86,26 @@
 
           <section class="plan" aria-labelledby="plan-title">
             <h2 class="minor-title" id="plan-title">Что будет создано</h2>
-            <dl class="plan-rows">
-              <div class="plan-row">
+            <dl class="flows">
+              <div>
                 <dt>Поток 1</dt>
                 <dd><span id="plan-geo" class="is-empty">страны не выбраны</span> <span class="arrow" aria-hidden="true">→</span> <span data-redirect-host>google.com</span></dd>
               </div>
-              <div class="plan-row">
+              <div>
                 <dt>Поток 2</dt>
-                <dd>все остальные <span class="arrow" aria-hidden="true">→</span> <span id="plan-offer" class="is-empty">оффер не выбран</span></dd>
+                <dd>остальные <span class="arrow" aria-hidden="true">→</span> <span id="plan-offer" class="is-empty">оффер не выбран</span></dd>
               </div>
             </dl>
           </section>
 
           <section class="defaults" id="defaults" data-field="defaults" aria-labelledby="defaults-title">
-            <div class="defaults-head">
+            <div class="label-row">
               <h2 class="minor-title" id="defaults-title">Домен, группа и источник</h2>
-              <button type="button" class="link" id="defaults-edit">Изменить</button>
+              <button type="button" class="info" aria-label="Подсказка про домен, группу и источник"><span data-icon="info"></span></button>
+              <span class="tip" role="tooltip">С ними создаётся каждая новая кампания. Выбираются один раз из списков Keitaro и запоминаются.</span>
+              <button type="button" class="btn btn-ghost btn-tiny label-action" id="defaults-edit">Изменить</button>
             </div>
-            <dl class="defaults-rows" id="defaults-rows" hidden>
+            <dl class="pairs" id="defaults-rows" hidden>
               <div><dt>Домен</dt><dd id="defaults-domain"></dd></div>
               <div><dt>Группа</dt><dd id="defaults-group"></dd></div>
               <div><dt>Источник</dt><dd id="defaults-source"></dd></div>
@@ -117,6 +136,11 @@
         <p class="form-error" id="camps-error" role="alert" hidden></p>
       </section>
     </main>
+
+    <footer class="foot">
+      <span>Тестовое задание выполнил <strong>Nikita Lapa</strong></span>
+      <a class="foot-link" href="https://github.com/nikito4kv/keitaro_wrapper" target="_blank" rel="noopener">Код на GitHub</a>
+    </footer>
   </div>
 
   <dialog class="dialog" id="defaults-dialog" aria-labelledby="dialog-title">

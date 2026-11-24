@@ -125,9 +125,21 @@ class KeitaroClient:
     def campaign_streams(self, campaign_id: int) -> list[dict[str, Any]]:
         return self._list(f"/campaigns/{campaign_id}/streams")
 
-    def set_stream_offers(self, stream_id: int, offers: list[dict[str, Any]]) -> dict[str, Any]:
-        """Заменяет состав офферов потока целиком: чего нет в списке, того не будет в потоке."""
-        return self._request("PUT", f"/streams/{stream_id}", json={"offers": offers})
+    def stream(self, stream_id: int) -> dict[str, Any]:
+        return self._request("GET", f"/streams/{stream_id}")
+
+    def set_stream_offers(
+        self, stream_id: int, offers: list[dict[str, Any]], *, switch_to_offers: bool = False
+    ) -> dict[str, Any]:
+        """Заменяет состав офферов потока целиком: чего нет в списке, того не будет в потоке.
+
+        switch_to_offers нужен потоку, который до этого офферы не раздавал (например, вёл по ссылке):
+        без смены схемы Keitaro сохранит офферы, но посетителей на них не отправит.
+        """
+        payload: dict[str, Any] = {"offers": offers}
+        if switch_to_offers:
+            payload["schema"] = "landings"
+        return self._request("PUT", f"/streams/{stream_id}", json=payload)
 
     # Внутреннее ----------------------------------------------------------
 

@@ -2,8 +2,9 @@ import { api } from './api.js';
 import { attachListbox } from './listbox.js';
 import {
   $,
-  copyButton,
+  button,
   el,
+  linkBox,
   formatDate,
   offerTitle,
   regionNames,
@@ -329,7 +330,7 @@ $('defaults-form').addEventListener('submit', async (event) => {
   }
   const saveButton = $('defaults-save');
   setDialogError(null);
-  setBusy(saveButton, true, 'Сохраняем');
+  setBusy(saveButton, true);
   try {
     state.defaults = await api('/defaults', {
       method: 'PUT',
@@ -344,7 +345,7 @@ $('defaults-form').addEventListener('submit', async (event) => {
   } catch (error) {
     setDialogError(error.message);
   } finally {
-    setBusy(saveButton, false, 'Сохранить');
+    setBusy(saveButton, false);
   }
 });
 
@@ -357,7 +358,7 @@ async function loadReference() {
     setConnection('ok', state.keitaroHost);
     return state.reference;
   } catch (error) {
-    setConnection('fail', 'Нет связи с Keitaro');
+    setConnection('fail', state.keitaroHost);
     showBanner(error.message);
     throw error;
   }
@@ -366,7 +367,7 @@ async function loadReference() {
 $('banner-retry').addEventListener('click', async () => {
   const button = $('banner-retry');
   button.disabled = true;
-  setConnection('checking', 'Проверяем связь с Keitaro');
+  setConnection('checking');
   try {
     await loadReference();
   } catch {
@@ -390,22 +391,28 @@ function campaignRow(campaign, { fresh = false, index = 0 } = {}) {
   time.dateTime = campaign.created_at;
   head.append(el('h3', '', campaign.name), time);
 
+  // Потоки показаны так же, как в блоке «Что будет создано» слева: один вид для одного понятия.
   const host = new URL(campaign.redirect_url).host;
-  const geo = el('p', 'camp-flow', `${shortList(campaign.countries.map(countryName), 4)} → ${host}`);
-  const rest = el('p', 'camp-flow', `Остальные → ${campaign.offer_name}`);
+  const flows = el('dl', 'flows');
+  const offerName = offerTitle({ id: campaign.offer_id, name: campaign.offer_name });
+  for (const [title, text] of [
+    ['Поток 1', `${shortList(campaign.countries.map(countryName), 3)} → ${host}`],
+    ['Поток 2', `остальные → ${offerName}`],
+  ]) {
+    const line = el('div');
+    line.append(el('dt', '', title), el('dd', '', text));
+    flows.append(line);
+  }
 
-  const link = el('div', 'camp-link');
-  // Ссылку кампании показываем текстом, а не ссылкой: случайный переход засчитался бы в трекере как клик.
-  const url = el('span', 'mono camp-url', campaign.url);
-  const edit = el('a', 'link', 'Изменить офферы');
-  edit.href = `/campaigns/${campaign.keitaro_campaign_id}`;
-  const admin = el('a', 'link', 'Открыть в Keitaro');
-  admin.href = campaign.admin_url;
-  admin.target = '_blank';
-  admin.rel = 'noopener';
-  link.append(url, copyButton(campaign.url), edit, admin);
+  const actions = el('div', 'camp-actions');
+  actions.append(
+    linkBox(campaign.url),
+    button('Изменить офферы', 'btn-quiet btn-small', { href: `/campaigns/${campaign.keitaro_campaign_id}` }),
+    button('Keitaro', 'btn-ghost btn-small', { href: campaign.admin_url, iconAfter: 'external' }),
+  );
+  actions.lastChild.title = 'Открыть кампанию в админке Keitaro';
 
-  body.append(head, geo, rest, link);
+  body.append(head, flows, actions);
   const clip = el('div', 'clip');
   clip.append(body);
   row.append(clip);
@@ -455,7 +462,7 @@ form.addEventListener('submit', async (event) => {
   if (state.busy || !validate()) return;
 
   state.busy = true;
-  setBusy(submitButton, true, 'Создаём кампанию');
+  setBusy(submitButton, true);
   try {
     const campaign = await api('/campaigns', {
       method: 'POST',
@@ -480,7 +487,7 @@ form.addEventListener('submit', async (event) => {
     else document.querySelector('.field.is-invalid input')?.focus();
   } finally {
     state.busy = false;
-    setBusy(submitButton, false, 'Создать кампанию');
+    setBusy(submitButton, false);
   }
 });
 
@@ -493,7 +500,7 @@ async function start() {
   try {
     boot = await api('/bootstrap');
   } catch (error) {
-    setConnection('fail', 'Приложение не готово');
+    setConnection('fail');
     showBanner(error.message);
     $('banner-retry').hidden = true;
     $('camps').replaceChildren();
@@ -508,7 +515,7 @@ async function start() {
     .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
   state.defaults = boot.defaults;
   state.redirectHost = new URL(boot.redirect_url).host;
-  state.keitaroHost = boot.keitaro_url ? new URL(boot.keitaro_url).host : 'Keitaro';
+  state.keitaroHost = boot.keitaro_url ? new URL(boot.keitaro_url).host : '';
 
   document.querySelectorAll('[data-redirect-host]').forEach((node) => {
     node.textContent = state.redirectHost;

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <title>Все кампании Keitaro</title>
-  <link rel="icon" href="data:,">
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="/static/fonts/golos-text-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/golos-text-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/app.css">
@@ -13,14 +13,24 @@
 <body>
   <div class="page">
     <header class="top">
+      <a class="brand" href="/campaigns" aria-label="Nikita Lapa. К списку кампаний">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+          <rect width="32" height="32" rx="9" fill="currentColor"/>
+          <path class="brand-letters" d="M8.5 22.5v-13l8 13v-13M16.5 22.5h7" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="brand-name">Nikita Lapa</span>
+      </a>
       <nav class="nav" aria-label="Разделы">
-        <a class="nav-link" href="/">Новая кампания</a>
         <a class="nav-link" href="/campaigns" aria-current="page">Все кампании</a>
       </nav>
-      <span class="conn" id="conn" data-state="checking">
-        <span class="conn-dot" aria-hidden="true"></span>
-        <span id="conn-text">Проверяем связь с Keitaro</span>
-      </span>
+      <div class="top-side">
+        <span class="conn has-tip" id="conn" data-state="checking" tabindex="0" aria-describedby="conn-tip">
+          <span class="conn-dot" aria-hidden="true"></span>
+          <span id="conn-text">Проверяем связь</span>
+          <span class="tip tip-end" id="conn-tip" role="tooltip">Проверяем, отвечает ли трекер Keitaro.</span>
+        </span>
+        <a class="btn btn-primary btn-small cta" href="/" aria-label="Новая кампания"><span data-icon="plus"></span><span class="cta-text">Новая кампания</span></a>
+      </div>
     </header>
 
     <div class="banner" id="banner" role="alert" hidden>
@@ -30,11 +40,11 @@
 
     <main class="narrow reveal">
       <h1>Все кампании</h1>
-      <p class="lead">Список берётся из Keitaro. Откройте кампанию, чтобы добавить или убрать офферы.</p>
+      <p class="lead">Список из Keitaro. Откройте кампанию, чтобы изменить её офферы.</p>
 
       <div class="field list-search" id="search-field" hidden>
-        <label for="search-input">Поиск</label>
-        <input class="input" id="search-input" type="search" autocomplete="off" placeholder="Название или номер кампании">
+        <label class="visually-hidden" for="search-input">Поиск кампании</label>
+        <input class="input" id="search-input" type="search" autocomplete="off" placeholder="Найти по названию или номеру">
       </div>
 
       <ul class="rows" id="rows" aria-busy="true">
@@ -45,15 +55,20 @@
 
       <div class="empty" id="empty" hidden>
         <p class="empty-title">В Keitaro пока нет кампаний</p>
-        <p>Создайте первую на странице <a class="link" href="/">«Новая кампания»</a>, и она появится здесь.</p>
+        <p>Нажмите «Новая кампания» вверху страницы, и она появится здесь.</p>
       </div>
       <p class="empty" id="nothing-found" hidden>Кампаний с таким названием или номером нет.</p>
 
-      <button type="button" class="btn btn-quiet more" id="more" hidden>
+      <button type="button" class="btn btn-quiet btn-small more" id="more" hidden>
         <span class="spinner" aria-hidden="true"></span>
         <span class="btn-label">Показать ещё</span>
       </button>
     </main>
+
+    <footer class="foot">
+      <span>Тестовое задание выполнил <strong>Nikita Lapa</strong></span>
+      <a class="foot-link" href="https://github.com/nikito4kv/keitaro_wrapper" target="_blank" rel="noopener">Код на GitHub</a>
+    </footer>
   </div>
 
   <script type="module" src="/static/js/campaigns.js"></script>

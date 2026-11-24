@@ -36,21 +36,26 @@
 
 /*
   Правила вида, одни на всю страницу.
-  Цвет: холодные серые и один акцент (зелёный). Красный только для ошибок.
-  Скругления: 6 у меток стран, 10 у полей и кнопок, 16 у окна и крупных блоков.
-  Движение: только transform и opacity, до 300 мс, быстрый старт и мягкая остановка.
+
+  Цвет. Холодные серые и один акцент (зелёный). Красный только для ошибок.
+  Кнопки. Три вида и не больше: главная (заливка цветом текста, одна на экран),
+          обычная (рамка), тихая (без рамки). Высота 44, 36 или 28.
+  Скругления. 6 у меток, 10 у полей и кнопок, 16 у окна и крупных блоков.
+  Движение. Только transform и opacity, до 300 мс, быстрый старт и мягкая остановка.
+  Подсказки. Пояснения спрятаны под значком «i» и открываются по наведению или с клавиатуры.
 */
 :root {
   --bg: #f4f5f6;
   --surface: #ffffff;
-  --surface-2: #eceef0;
-  --hover: #f0f2f3;
+  --surface-2: #e9ebee;
+  --hover: #eef0f2;
   --ink: #15171a;
   --ink-2: #4c5259;
   --ink-3: #6b7178;
   --line: #dcdfe3;
   --line-strong: #bfc4ca;
   --accent: #0a7650;
+  --on-accent: #ffffff;
   --accent-soft: #dff1e9;
   --danger: #b3261e;
   --danger-soft: #fbeae8;
@@ -78,6 +83,7 @@
     --line: #2c3035;
     --line-strong: #464c53;
     --accent: #4cc893;
+    --on-accent: #0b1f16;
     --accent-soft: #15301f;
     --danger: #ff8f85;
     --danger-soft: #3a1917;
@@ -132,6 +138,15 @@ select {
   font-variant-ligatures: none;
 }
 
+.icon {
+  flex: none;
+  display: block;
+}
+
+[data-icon] {
+  display: inline-flex;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -153,23 +168,51 @@ select {
 /* Каркас ------------------------------------------------------------- */
 
 .page {
+  display: flex;
+  flex-direction: column;
   max-width: 1120px;
+  min-height: 100dvh;
   margin: 0 auto;
-  padding: 0 32px 96px;
+  padding: 0 32px;
+}
+
+.page > main {
+  flex: 1;
 }
 
 .top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: 64px;
+  gap: 8px 20px;
+  min-height: 64px;
+}
+
+/* Логотип NL: стойка буквы N продолжается ножкой буквы L */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--r-m);
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  flex: none;
+  width: 30px;
+  height: 30px;
+}
+
+.brand-letters {
+  stroke: var(--bg);
 }
 
 .nav {
   display: flex;
   gap: 4px;
-  margin-left: -12px;
 }
 
 .nav-link {
@@ -195,13 +238,24 @@ select {
   }
 }
 
+.top-side {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+/* Состояние связи с трекером. Что оно значит, объясняет подсказка. */
 .conn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
   color: var(--ink-2);
   font-size: 13px;
+  white-space: nowrap;
+  cursor: help;
 }
 
 .conn-dot {
@@ -221,34 +275,57 @@ select {
   background: var(--danger);
 }
 
-#conn-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 20px;
+  margin-top: 72px;
+  padding: 20px 0 28px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.foot strong {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.foot-link {
+  border-radius: 4px;
+  color: var(--ink-2);
+  text-underline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .foot-link:hover {
+    color: var(--ink);
+  }
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
   align-items: start;
-  gap: 88px;
-  padding-top: 40px;
+  gap: 72px;
+  padding-top: 32px;
 }
 
 h1 {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
 .lead {
-  margin-top: 8px;
+  margin-top: 6px;
   color: var(--ink-2);
 }
 
 .history h2 {
-  padding-top: 8px;
+  padding-top: 6px;
   font-size: 15px;
   font-weight: 600;
   line-height: 1.6;
@@ -276,6 +353,105 @@ h1 {
   }
 }
 
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Подсказки ------------------------------------------------------------- */
+
+/*
+  Подсказка появляется рядом с тем, на что навели. Два способа поставить:
+  1. элемент с классом has-tip сам вызывает подсказку, лежащую внутри него;
+  2. кнопка-значок .info вызывает подсказку, которая идёт сразу после неё
+     и встаёт по левому краю строки .label-row, поэтому не вылезает за экран.
+*/
+.has-tip,
+.label-row {
+  position: relative;
+}
+
+.tip {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 8px);
+  left: 0;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 40px));
+  padding: 10px 12px;
+  border-radius: var(--r-m);
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-align: left;
+  white-space: normal;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-3px) scale(0.98);
+  transform-origin: top left;
+  transition:
+    opacity 110ms ease,
+    transform 110ms ease,
+    visibility 0s linear 110ms;
+}
+
+.tip-end {
+  right: 0;
+  left: auto;
+  transform-origin: top right;
+}
+
+.has-tip:hover > .tip,
+.has-tip:focus-visible > .tip,
+.has-tip:focus-within > .tip,
+.info:hover + .tip,
+.info:focus-visible + .tip {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 150ms ease 60ms,
+    transform 180ms var(--ease-out) 60ms,
+    visibility 0s linear 60ms;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+
+.label-action {
+  margin-left: auto;
+}
+
+/* Значок «i» в кружке */
+.info {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--ink-3);
+  cursor: help;
+  transition: color 140ms ease;
+}
+
+.info:hover,
+.info:focus-visible {
+  color: var(--ink);
+}
+
 /* Плашка о связи с Keitaro -------------------------------------------- */
 
 .banner {
@@ -284,7 +460,7 @@ h1 {
   justify-content: space-between;
   gap: 16px;
   margin-top: 8px;
-  padding: 14px 16px 14px 20px;
+  padding: 12px 12px 12px 18px;
   border-radius: var(--r-l);
   background: var(--danger-soft);
   color: var(--danger);
@@ -296,6 +472,254 @@ h1 {
   overflow-wrap: anywhere;
 }
 
+/* Кнопки --------------------------------------------------------------- */
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: var(--r-m);
+  background: none;
+  color: var(--ink);
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 140ms var(--ease-out),
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* Главная: заливка цветом текста. На тёмной теме она белая, на светлой чёрная. */
+.btn-primary {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.btn-quiet {
+  border-color: var(--line-strong);
+}
+
+.btn-ghost {
+  color: var(--ink-2);
+}
+
+.btn-small {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 14px;
+}
+
+.btn-tiny {
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+/* Квадратная кнопка с одним значком. Что она делает, говорит подсказка. */
+.btn-square {
+  width: 36px;
+  padding: 0;
+}
+
+.banner .btn-quiet {
+  border-color: currentColor;
+  color: inherit;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--ink) 86%, var(--bg));
+  }
+
+  .btn-quiet:hover:not(:disabled),
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--hover);
+    color: var(--ink);
+  }
+
+  .btn-quiet:hover:not(:disabled) {
+    border-color: var(--ink-3);
+  }
+}
+
+/*
+  Кнопка в работе. Подпись и значок становятся невидимыми, но место за ними остаётся,
+  а по центру крутится вертушка. Ширина кнопки при этом не меняется.
+*/
+.spinner {
+  position: absolute;
+  inset: 0;
+  display: none;
+  width: 16px;
+  height: 16px;
+  margin: auto;
+  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 600ms linear infinite;
+}
+
+.btn[aria-busy="true"] {
+  opacity: 1;
+}
+
+.btn[aria-busy="true"] > :not(.spinner) {
+  visibility: hidden;
+}
+
+.btn[aria-busy="true"] .spinner {
+  display: block;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Ссылка в тексте */
+.link {
+  border-radius: 4px;
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+/* Подпись, которая на миг размывается при смене текста */
+.swap {
+  display: inline-block;
+  transition:
+    opacity 140ms ease,
+    filter 140ms ease;
+}
+
+.swap.is-swapping {
+  opacity: 0;
+  filter: blur(2px);
+}
+
+/* Ссылка кампании с кнопкой «Скопировать» ------------------------------- */
+
+.linkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  height: 36px;
+  padding: 0 3px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-m);
+  background: var(--surface);
+}
+
+.linkbox-url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  user-select: all;
+}
+
+/*
+  Обе подписи кнопки лежат в одной ячейке, поэтому ширина кнопки всегда равна
+  самой длинной из них и при смене «Скопировать» на «Скопировано» ничего не прыгает.
+*/
+.copy {
+  display: grid;
+  flex: none;
+  height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 140ms var(--ease-out),
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.copy:active {
+  transform: scale(0.97);
+}
+
+.copy-face {
+  display: inline-flex;
+  grid-area: 1 / 1;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition:
+    opacity 160ms ease,
+    transform 200ms var(--ease-out);
+}
+
+.copy-done {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* Скопировано: кнопка заливается акцентом, подпись меняется на галочку */
+.copy[data-state="done"] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.copy[data-state="done"] .copy-idle {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.copy[data-state="done"] .copy-done {
+  opacity: 1;
+  transform: none;
+}
+
+.copy[data-state="fail"] {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .copy:not([data-state="done"]):hover {
+    background: var(--line);
+  }
+}
+
 /* Форма -------------------------------------------------------------- */
 
 form {
@@ -304,8 +728,8 @@ form {
 
 #campaign-form {
   display: grid;
-  gap: 24px;
-  margin-top: 32px;
+  gap: 20px;
+  margin-top: 28px;
 }
 
 .field {
@@ -317,12 +741,9 @@ label {
   font-weight: 500;
 }
 
-.hint {
-  margin-top: -4px;
-  margin-bottom: 2px;
-  color: var(--ink-2);
-  font-size: 13px;
-  line-height: 1.45;
+::placeholder {
+  color: var(--ink-3);
+  opacity: 1;
 }
 
 .input,
@@ -397,12 +818,6 @@ label {
   overflow-wrap: anywhere;
 }
 
-@keyframes fade {
-  from {
-    opacity: 0;
-  }
-}
-
 /* Поле с выбранными странами ------------------------------------------ */
 
 .combo {
@@ -419,8 +834,8 @@ label {
 }
 
 .tags input {
-  flex: 1 1 96px;
-  min-width: 96px;
+  flex: 1 1 120px;
+  min-width: 120px;
   height: 30px;
   padding: 0 8px;
   border: 0;
@@ -570,7 +985,7 @@ label {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 14px;
+  padding: 0 7px 0 14px;
   animation: fade 180ms ease both;
 }
 
@@ -588,73 +1003,66 @@ label {
   white-space: nowrap;
 }
 
-/* Что будет создано. Настройки по умолчанию ---------------------------- */
+/* Потоки кампании коротко: «Поток 1  страны → сайт». Один вид в форме и в журнале. */
 
-.plan {
-  display: grid;
-  gap: 10px;
-  padding: 16px 18px;
-  border-radius: var(--r-l);
-  background: var(--surface-2);
-}
-
-.plan-rows {
-  display: grid;
-  gap: 6px;
-}
-
-.plan-row {
-  display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 8px;
-}
-
-.plan-row dt,
-.defaults-rows dt {
-  color: var(--ink-2);
-}
-
-.plan-row dd {
-  overflow-wrap: anywhere;
-}
-
-.plan .is-empty {
-  color: var(--ink-3);
-}
-
-.arrow {
-  color: var(--ink-3);
-}
-
-.defaults {
-  display: grid;
-  gap: 8px;
-  border-radius: var(--r-m);
-}
-
-.defaults.is-invalid .defaults-empty {
-  color: var(--danger);
-}
-
-.defaults-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.defaults-rows {
+.flows {
   display: grid;
   gap: 4px;
 }
 
-.defaults-rows > div {
+.flows > div {
   display: grid;
-  grid-template-columns: 90px minmax(0, 1fr);
+  grid-template-columns: 62px minmax(0, 1fr);
   gap: 8px;
 }
 
-.defaults-rows dd {
+.flows dt {
+  color: var(--ink-3);
+}
+
+.flows dd {
+  overflow-wrap: anywhere;
+}
+
+.flows .is-empty,
+.arrow {
+  color: var(--ink-3);
+}
+
+.plan {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--r-l);
+  background: var(--surface-2);
+}
+
+/* Домен, группа и источник: одна строка из трёх пар */
+
+.defaults {
+  display: grid;
+  gap: 6px;
+}
+
+/* Три пары в одну строку. Если названия длинные, пары переносятся целиком, значения не обрезаются. */
+.pairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 13px;
+}
+
+.pairs > div {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pairs dt {
+  color: var(--ink-3);
+}
+
+.pairs dd {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -662,133 +1070,22 @@ label {
 
 .defaults-empty {
   color: var(--ink-2);
+  font-size: 14px;
 }
 
-/* Кнопки --------------------------------------------------------------- */
-
-.btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  height: 46px;
-  padding: 0 22px;
-  border: 1px solid transparent;
-  border-radius: var(--r-m);
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    transform 140ms var(--ease-out),
-    background-color 160ms ease,
-    border-color 160ms ease,
-    opacity 160ms ease;
+.defaults.is-invalid .defaults-empty {
+  color: var(--danger);
 }
 
-.btn:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-.btn:disabled {
-  cursor: default;
-}
-
-.btn-primary {
+#submit {
   justify-self: start;
   min-width: 204px;
-  background: var(--ink);
-  color: var(--bg);
-}
-
-.btn-quiet {
-  border-color: var(--line-strong);
-  background: transparent;
-}
-
-.btn-small {
-  flex: none;
-  height: 36px;
-  padding: 0 14px;
-  font-size: 14px;
-}
-
-.banner .btn-quiet {
-  border-color: currentColor;
-  color: inherit;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn-primary:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--ink) 86%, var(--bg));
-  }
-
-  .btn-quiet:hover:not(:disabled) {
-    background: var(--hover);
-  }
-}
-
-/* Кнопка в работе: появляется вертушка, подпись меняется */
-.spinner {
-  display: none;
-  width: 15px;
-  height: 15px;
-  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
-  border-top-color: currentColor;
-  border-radius: 50%;
-  animation: spin 600ms linear infinite;
-}
-
-.btn[aria-busy="true"] .spinner {
-  display: block;
-}
-
-.btn[aria-busy="true"] {
-  opacity: 0.86;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.link {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .link:hover {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-}
-
-/* Подпись кнопки «Скопировать» на миг размывается при смене текста */
-.swap {
-  display: inline-block;
-  transition:
-    opacity 140ms ease,
-    filter 140ms ease;
-}
-
-.swap.is-swapping {
-  opacity: 0;
-  filter: blur(2px);
 }
 
 /* Созданные кампании --------------------------------------------------- */
 
 .camps {
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .camp {
@@ -807,15 +1104,25 @@ label {
   overflow: hidden;
 }
 
+/* У оффера обрезка нужна только на время появления: иначе она срезала бы подсказку к закреплению */
+.offer > .clip {
+  overflow: visible;
+}
+
+.offer.grow-in > .clip {
+  overflow: hidden;
+}
+
 .camp > .clip {
-  margin: 0 -16px;
+  margin: 0 -14px;
 }
 
 .camp-body {
   display: grid;
-  gap: 6px;
-  padding: 18px 16px;
+  gap: 10px;
+  padding: 16px 14px;
   border-radius: var(--r-m);
+  font-size: 14px;
 }
 
 /* Строки при первой загрузке появляются по очереди */
@@ -870,25 +1177,19 @@ label {
   font-size: 13px;
 }
 
-.camp-flow {
+.camp .flows {
   color: var(--ink-2);
-  font-size: 14px;
-  overflow-wrap: anywhere;
 }
 
-.camp-link {
+/* Ссылка занимает свою строку целиком и видна полностью, кнопки стоят под ней на одних и тех же местах */
+.camp-actions {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 18px;
-  margin-top: 4px;
+  gap: 8px;
 }
 
-.camp-url {
-  min-width: 0;
-  font-size: 13px;
-  overflow-wrap: anywhere;
-  user-select: all;
+.camp-actions .linkbox {
+  flex: 1 1 100%;
 }
 
 .empty {
@@ -1020,62 +1321,19 @@ label {
   min-width: 132px;
 }
 
-/* Узкие экраны --------------------------------------------------------- */
-
-@media (max-width: 920px) {
-  .page {
-    padding: 0 20px 72px;
-  }
-
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 56px;
-    padding-top: 24px;
-  }
-
-  h1 {
-    font-size: 24px;
-  }
-
-  .btn-primary {
-    justify-self: stretch;
-  }
-
-  .banner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-
-@media (max-width: 420px) {
-  .page {
-    padding: 0 16px 64px;
-  }
-
-  .camp-head {
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .dialog {
-    padding: 22px;
-  }
-
-  .dialog-actions {
-    flex-direction: column;
-  }
-}
-
 /* Страницы в одну колонку: список кампаний и редактор офферов ------------ */
 
 .narrow {
+  width: 100%;
   max-width: 760px;
-  padding-top: 40px;
+  padding-top: 32px;
 }
 
 .back {
-  display: inline-block;
-  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
   border-radius: 4px;
   color: var(--ink-2);
   font-size: 14px;
@@ -1103,12 +1361,12 @@ label {
 /* Список кампаний */
 
 .list-search {
-  max-width: 440px;
-  margin-top: 28px;
+  max-width: 420px;
+  margin-top: 24px;
 }
 
 .rows {
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .row {
@@ -1129,8 +1387,8 @@ label {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  margin: 0 -16px;
-  padding: 16px;
+  margin: 0 -14px;
+  padding: 14px;
   border-radius: var(--r-m);
   color: inherit;
   text-decoration: none;
@@ -1159,52 +1417,71 @@ label {
 }
 
 .row-go {
+  display: inline-flex;
   flex: none;
-  color: var(--accent);
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-2);
   font-size: 14px;
   font-weight: 500;
+  transition:
+    color 140ms ease,
+    transform 180ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .row-link:hover {
     background: var(--surface-2);
   }
+
+  .row-link:hover .row-go {
+    color: var(--ink);
+    transform: translateX(2px);
+  }
 }
 
 .more {
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 /* Шапка редактора */
 
 .editor-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 12px 24px;
 }
 
-.editor-title {
-  display: grid;
-  gap: 8px;
+.editor-head h1 {
   min-width: 0;
-}
-
-.editor-title h1 {
   overflow-wrap: anywhere;
 }
 
-.editor-sync {
-  display: grid;
+.editor-tools {
+  display: flex;
   flex: none;
-  justify-items: end;
-  gap: 6px;
+  gap: 4px;
+}
+
+.editor-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  min-height: 36px;
+  margin-top: 12px;
+}
+
+.editor-sub > div {
+  flex: 0 1 420px;
+  min-width: 0;
 }
 
 .sync-note {
-  min-height: 18px;
+  flex: none;
   color: var(--ink-3);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .skeleton-line {
@@ -1222,19 +1499,36 @@ label {
 
 .streams {
   display: grid;
-  gap: 48px;
-  margin-top: 40px;
+  gap: 40px;
+  margin-top: 36px;
 }
 
+/* Части потока идут столбиком с шагом 12. Свёрнутая полоса и пустой список места не занимают. */
 .stream {
-  display: grid;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.stream > * + * {
+  margin-top: 12px;
+}
+
+.stream > .fold {
+  margin-top: 0;
+}
+
+.stream .fold-inner {
+  padding-top: 12px;
+}
+
+.stream .offers:empty {
+  display: none;
 }
 
 .stream-head h2 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.3;
   letter-spacing: -0.01em;
 }
 
@@ -1246,19 +1540,25 @@ label {
 }
 
 .stream-status {
-  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
   color: var(--accent);
   font-size: 13px;
+  font-weight: 500;
   animation: fade 240ms ease both;
 }
 
 .stream-plain {
   color: var(--ink-2);
+  font-size: 14px;
   overflow-wrap: anywhere;
 }
 
 .stream-note {
-  margin: 0;
+  color: var(--ink-2);
+  font-size: 13px;
 }
 
 /* Полоса «изменения не отправлены»: раздвигается, когда черновик расходится с Keitaro */
@@ -1290,7 +1590,7 @@ label {
   align-items: center;
   justify-content: space-between;
   gap: 12px 20px;
-  padding: 14px 14px 14px 18px;
+  padding: 10px 10px 10px 16px;
   border-radius: var(--r-l);
   background: var(--surface-2);
 }
@@ -1309,11 +1609,7 @@ label {
 .unsent-actions {
   display: flex;
   flex: none;
-  gap: 8px;
-}
-
-.unsent-actions .btn-primary {
-  min-width: 0;
+  gap: 6px;
 }
 
 /* Офферы потока */
@@ -1342,16 +1638,17 @@ label {
   }
 }
 
+/* Колонки одной ширины во всех строках: доля, название, действия. Ничего не прыгает. */
 .offer-inner {
   display: grid;
-  grid-template-columns: 68px minmax(0, 1fr) auto;
+  grid-template-columns: 60px minmax(0, 1fr) 132px;
   align-items: center;
   gap: 4px 16px;
-  padding: 14px 0;
+  padding: 10px 0;
 }
 
 .offer-share {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.02em;
@@ -1369,7 +1666,7 @@ label {
 
 .offer-main {
   display: grid;
-  gap: 2px;
+  gap: 1px;
   min-width: 0;
 }
 
@@ -1405,26 +1702,39 @@ label {
 
 .offer-actions {
   display: flex;
-  gap: 18px;
+  justify-content: flex-end;
+  gap: 4px;
   transition: opacity 140ms ease;
 }
 
-.link.pin,
-.link.danger {
-  color: var(--ink-2);
+.offer-actions .tip {
+  top: calc(100% + 6px);
 }
 
-.link.pin[aria-pressed="true"] {
+/* «Убрать» и «Вернуть» одной ширины: при смене подписи соседние кнопки не сдвигаются */
+.offer-toggle {
+  min-width: 88px;
+}
+
+/* Закрепление доли: значок-переключатель. Нажатый залит акцентом. */
+.pin {
+  color: var(--ink-3);
+}
+
+.pin[aria-pressed="true"] {
+  background: var(--accent-soft);
   color: var(--accent);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .link.danger:hover {
-    color: var(--danger);
+  .pin[aria-pressed="true"]:hover:not(:disabled) {
+    background: var(--accent-soft);
+    color: var(--accent);
   }
 
-  .link.pin:hover {
-    color: var(--ink);
+  .btn-danger:hover:not(:disabled) {
+    background: var(--danger-soft);
+    color: var(--danger);
   }
 }
 
@@ -1436,42 +1746,102 @@ label {
 }
 
 .add-offer {
-  max-width: 440px;
-  margin-top: 12px;
+  max-width: 420px;
+  margin-top: 4px;
 }
 
-.add-offer .hint {
-  margin: 4px 0 0;
+/* Кампания без потока с офферами */
+.no-offers {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--r-l);
+  background: var(--surface-2);
 }
+
+.no-offers .add-offer {
+  margin-top: 0;
+}
+
+/* Узкие экраны --------------------------------------------------------- */
 
 @media (max-width: 920px) {
+  .page {
+    padding: 0 20px;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 48px;
+    padding-top: 20px;
+  }
+
   .narrow {
-    padding-top: 24px;
+    padding-top: 20px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  #submit {
+    justify-self: stretch;
+  }
+
+  .banner {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
 @media (max-width: 640px) {
+  .page {
+    padding: 0 16px;
+  }
+
   .top {
     flex-wrap: wrap;
-    height: auto;
-    min-height: 64px;
     padding: 12px 0;
-    gap: 8px 16px;
   }
 
-  .editor-head {
+  /* На телефоне подпись логотипа уходит, значок остаётся */
+  .brand-name {
+    display: none;
+  }
+
+  .conn {
+    padding: 6px 0;
+  }
+
+  #conn-text {
+    display: none;
+  }
+
+  .editor-head,
+  .editor-sub {
     flex-direction: column;
-    gap: 16px;
+    align-items: flex-start;
   }
 
-  .editor-sync {
-    justify-items: start;
+  .editor-sub > div {
+    flex: none;
+    width: 100%;
+  }
+
+  /* В шапке на телефоне от кнопки «Новая кампания» остаётся плюс, чтобы всё встало в одну строку */
+  .cta-text {
+    display: none;
+  }
+
+  .cta {
+    width: 36px;
+    padding: 0;
   }
 
   .unsent-body {
     flex-direction: column;
     align-items: stretch;
-    padding: 14px;
+    padding: 12px;
   }
 
   .unsent-actions .btn {
@@ -1479,7 +1849,7 @@ label {
   }
 
   .offer-inner {
-    grid-template-columns: 60px minmax(0, 1fr);
+    grid-template-columns: 56px minmax(0, 1fr);
   }
 
   .offer-name {
@@ -1489,10 +1859,24 @@ label {
 
   .offer-actions {
     grid-column: 2;
+    justify-content: flex-start;
   }
 
-  .row-go {
+  .row-go span {
     display: none;
+  }
+
+  .camp-head {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .dialog {
+    padding: 22px;
+  }
+
+  .dialog-actions {
+    flex-direction: column;
   }
 }
 
@@ -1516,7 +1900,10 @@ label {
   .listbox.is-open,
   .dialog,
   .dialog[open],
-  .btn {
+  .btn,
+  .copy,
+  .copy-face,
+  .tip {
     transform: none !important;
   }
 
@@ -1524,7 +1911,8 @@ label {
     transition: opacity 200ms ease;
   }
 
-  .skeleton span {
+  .skeleton span,
+  .skeleton-line {
     animation: none;
   }
 }
