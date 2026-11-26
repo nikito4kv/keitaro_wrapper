@@ -133,5 +133,10 @@ A working, tested tool; the interface is Russian only. The app has no login and 
 - English interface strings next to the Russian ones.
 - Let a push detect that someone changed the flow in the tracker meanwhile, instead of overwriting it (today "Refresh from Keitaro" is the safeguard).
 
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
 ---
 Built by [Nikita Lapa](https://github.com/nikito4kv) · built with an AI-assisted workflow
