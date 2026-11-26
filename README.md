@@ -115,7 +115,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-56 test cases run in about 3 seconds and never touch the network or a `.env` file. They use an in-memory SQLite database and an in-process fake Keitaro (`tests/fake_keitaro.py`) that records every request, so tests can assert the exact payloads sent to the tracker. Coverage by area:
+56 test cases run in a few seconds and never touch the network or a `.env` file. They use an in-memory SQLite database and an in-process fake Keitaro (`tests/fake_keitaro.py`) that records every request, so tests can assert the exact payloads sent to the tracker. Coverage by area:
 
 - **Campaign creation:** both flows with exact payloads, rollback when a flow is rejected, duplicate names, unknown or deleted offers, form validation.
 - **Offer editor:** a step-by-step walkthrough (add, send, add and cancel, remove, restore, changes made directly in Keitaro, pin), empty flows, drafts surviving a reopen, deleted offers still shown by name.
