@@ -7,6 +7,7 @@
   <img alt="FastAPI" src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white">
   <img alt="SQLAlchemy 2" src="https://img.shields.io/badge/SQLAlchemy-2.0-D71F00">
   <img alt="Alembic" src="https://img.shields.io/badge/Alembic-migrations-6BA81E">
+  <a href="https://github.com/nikito4kv/keitaro_wrapper/actions"><img alt="CI" src="https://github.com/nikito4kv/keitaro_wrapper/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Vanilla JS" src="https://img.shields.io/badge/UI-vanilla%20JS%2C%20no%20build-F7DF1E?logo=javascript&logoColor=black">
 </p>
 
@@ -122,13 +123,12 @@ pytest
 - **Share rule, reference data and offer search:** rounding and pinning, search by words and by number, wrong or missing API key.
 - **Migrations:** upgrade to head, `alembic check` (models and migrations agree), downgrade to base.
 
-There is no CI workflow in the repository yet.
+CI runs `pytest` on every push and pull request (Python 3.10 and 3.12).
 
 ## Status & roadmap
 
 A working, tested tool; the interface is Russian only. The app has no login and is meant to run on a local machine or an internal network, so do not expose it to the internet as is.
 
-- Add a CI workflow that runs `pytest` on every push.
 - Optional password protection for shared deployments.
 - English interface strings next to the Russian ones.
 - Let a push detect that someone changed the flow in the tracker meanwhile, instead of overwriting it (today "Refresh from Keitaro" is the safeguard).
